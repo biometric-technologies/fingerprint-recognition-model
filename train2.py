@@ -76,9 +76,11 @@ if __name__ == '__main__':
     input_positive = Input(shape=(192, 192, 1))
     input_negative = Input(shape=(192, 192, 1))
 
-    embedding_anchor = model2.create_unet_model(input_anchor)
-    embedding_positive = model2.create_unet_model(input_positive)
-    embedding_negative = model2.create_unet_model(input_negative)
+    embedding_model = model2.create_unet_model((192, 192))
+
+    embedding_anchor = embedding_model(input_anchor)
+    embedding_positive = embedding_model(input_positive)
+    embedding_negative = embedding_model(input_negative)
 
     output = tf.keras.layers.concatenate([embedding_anchor, embedding_positive, embedding_negative], axis=1)
 
