@@ -6,7 +6,8 @@ from keras.callbacks import ModelCheckpoint
 from keras.layers import Input
 from keras.models import Model, save_model
 import model2
-from tripplet_generator import CasiaV5TripletGenerator
+from tripplet_generator import create_casiaV5_generators
+import matplotlib.pyplot as plt
 
 
 def triplet_loss(y_true, y_pred, margin=1.0):
@@ -27,7 +28,7 @@ def load_and_preprocess(image_path):
 
 
 if __name__ == '__main__':
-    root_folder = 'fingerprint-v5-master'
+    root_folder = 'fingerprint-v5-master-3'
 
     embedding_model = model2.create_unet_model((192, 192, 1))
     print(embedding_model.summary())
@@ -44,10 +45,24 @@ if __name__ == '__main__':
     triplet_model = Model([input_anchor, input_positive, input_negative], output)
     triplet_model.compile(optimizer='adam', loss=triplet_loss)
 
-    checkpoint = ModelCheckpoint('model_weights_best.h5', save_best_only=True, monitor='loss')
+    checkpoint = ModelCheckpoint('model_weights_best.h5', save_best_only=True, monitor='val_loss')
 
-    triplet_gen = CasiaV5TripletGenerator(root_folder, 32)
-    triplet_model.fit(triplet_gen, epochs=32)
+    train_gen, val_gen = create_casiaV5_generators(root_folder, 32)
+
+    history = triplet_model.fit(x=train_gen, validation_data=val_gen, epochs=8)
 
     saved_model_path = os.path.join(".", 'saved_model')
     save_model(triplet_model, saved_model_path)
+
+    # Plotting training loss
+    plt.figure(figsize=(12, 4))
+
+    plt.subplot(1, 2, 1)
+    plt.plot(history.history['loss'], label='Train Loss')
+    plt.plot(history.history['val_loss'], label='Validation Loss')
+    plt.title('Training and Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    plt.savefig('train_metrics.png', dpi=300, bbox_inches='tight')
