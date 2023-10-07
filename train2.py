@@ -6,7 +6,7 @@ from keras.callbacks import ModelCheckpoint
 from keras.layers import Input
 from keras.models import Model, save_model
 import model2
-from tripplet_generator import TripletGenerator
+from tripplet_generator import CasiaV5TripletGenerator
 
 
 def triplet_loss(y_true, y_pred, margin=1.0):
@@ -46,8 +46,8 @@ if __name__ == '__main__':
 
     checkpoint = ModelCheckpoint('model_weights_best.h5', save_best_only=True, monitor='loss')
 
-    triplet_gen = TripletGenerator(root_folder, 32)
-    triplet_model.fit(triplet_gen, epochs=64)
+    triplet_gen = CasiaV5TripletGenerator(root_folder, 32)
+    triplet_model.fit(triplet_gen, epochs=32)
 
     saved_model_path = os.path.join(".", 'saved_model')
     save_model(triplet_model, saved_model_path)
