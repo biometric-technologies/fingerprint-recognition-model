@@ -59,4 +59,8 @@ class TripletGenerator(Sequence):
             positives.append(positive_img)
             negatives.append(negative_img)
 
-        return [np.array(anchors), np.array(positives), np.array(negatives)], np.zeros((len(anchors),))
+        anchors = np.array(anchors).reshape(-1, 192, 192, 1)
+        positives = np.array(positives).reshape(-1, 192, 192, 1)
+        negatives = np.array(negatives).reshape(-1, 192, 192, 1)
+        y_dummy = np.empty((anchors.shape[0], 3 * 128))
+        return [anchors, positives, negatives], y_dummy
