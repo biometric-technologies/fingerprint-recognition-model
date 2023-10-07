@@ -76,7 +76,8 @@ if __name__ == '__main__':
     input_positive = Input(shape=(192, 192, 1))
     input_negative = Input(shape=(192, 192, 1))
 
-    embedding_model = model2.create_unet_model((192, 192))
+    embedding_model = model2.create_unet_model((192, 192, 1))
+    print(embedding_model.summary())
 
     embedding_anchor = embedding_model(input_anchor)
     embedding_positive = embedding_model(input_positive)
@@ -88,7 +89,7 @@ if __name__ == '__main__':
     triplet_model.compile(optimizer='adam', loss=triplet_loss)
 
     y_dummy = np.empty((anchors.shape[0], 3 * 128))
-    triplet_model.fit([anchors, positives, negatives], y_dummy, epochs=12, batch_size=16)
+    triplet_model.fit([anchors, positives, negatives], y_dummy, epochs=12, batch_size=8)
 
     saved_model_path = os.path.join(".", 'saved_model2')
     save_model(triplet_model, saved_model_path)
