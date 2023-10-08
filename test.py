@@ -4,6 +4,7 @@ import cv2
 import os
 import numpy as np
 from train import triplet_loss
+import matplotlib.pyplot as plt
 
 
 def preprocess_image(image_path):
@@ -47,29 +48,36 @@ def load_dataset(root_folder):
 def evaluate_model(model, test_images, test_labels):
     threshold = 0.5
     tp, tn, fp, fn = 0, 0, 0, 0
+    genuine_distances = []
+    impostor_distances = []
 
     embeddings = model.predict(test_images)
     pairwise_distances = np.linalg.norm(embeddings[:, np.newaxis] - embeddings, axis=2)
     for i in range(len(embeddings)):
         for j in range(len(embeddings)):
+            if i == j:
+                continue
             if test_labels[i] == test_labels[j]:
+                genuine_distances.append(pairwise_distances[i][j])
                 if pairwise_distances[i][j] >= threshold:
                     tp += 1
                 elif pairwise_distances[i][j] < threshold:
                     fp += 1
             if test_labels[i] != test_labels[j]:
+                impostor_distances.append(pairwise_distances[i][j])
                 if pairwise_distances[i][j] < threshold:
                     tn += 1
                 elif pairwise_distances[i][j] >= threshold:
                     fn += 1
     total = tp + tn + fp + fn
-    FAR = int(fp / max(total, 1) * 100)
-    FRR = int(fn / max(total, 1) * 100)
+    FAR = fp / max(total, 1) * 100
+    FRR = fn / max(total, 1) * 100
     accuracy = (tp + tn) / total * 100
     APCER = fp / (tn + fp)
     BPCER = fn / (tp + fn)
     ACER = (APCER + BPCER) / 2 * 100
-    return accuracy, FAR, FRR, ACER
+
+    return accuracy, FAR, FRR, ACER, genuine_distances, impostor_distances
 
 
 if __name__ == '__main__':
@@ -78,8 +86,19 @@ if __name__ == '__main__':
     test_images, test_labels = load_dataset("fingerprint-v5-master-test")
     test_labels = preprocess_labels(test_labels)
     embedding_model = loaded_model.layers[3]
-    accuracy, FAR, FRR, ACER = evaluate_model(embedding_model, test_images, test_labels)
-    print(f"False Accept Rate %: {FAR}")
-    print(f"False Rejection Rate %: {FRR}")
-    print(f"Accuracy %: {accuracy}")
-    print(f"ACER %: {ACER}")
+    accuracy, FAR, FRR, ACER, genuine_distances, impostor_distances = evaluate_model(embedding_model, test_images,
+                                                                                     test_labels)
+    print(f"False Accept Rate %: {FAR:.2f}")
+    print(f"False Rejection Rate %: {FRR:.2f}")
+    print(f"Accuracy %: {accuracy:.2f}")
+    print(f"ACER %: {ACER:.2f}")
+    plt.figure(figsize=(10, 5))
+    # Plotting the genuine distances
+    plt.hist(genuine_distances, bins=50, alpha=0.5, color='blue', label='Genuine pairs')
+    # Plotting the impostor distances
+    plt.hist(impostor_distances, bins=50, alpha=0.5, color='red', label='Impostor pairs')
+    plt.title('Distribution of pairwise distances')
+    plt.xlabel('Distance')
+    plt.ylabel('Frequency')
+    plt.legend()
+    plt.show()
