@@ -3,28 +3,40 @@ from keras.layers import Input, Conv2D, MaxPooling2D, Add, Dense, Lambda, Global
 from keras.models import Model
 import tensorflow as tf
 
-
-def add_resblock(x, num_filters, num_conv):
+def res_block(x, filters, kernel_size=3, stride=1):
     shortcut = x
-    for _ in range(num_conv):
-        x = Conv2D(num_filters, kernel_size=(3, 3), padding='same')(x)
-        x = BatchNormalization()(x)
-        x = ReLU()(x)
-    x = Add()([shortcut, x])
+    # First convolution
+    x = Conv2D(filters, kernel_size=kernel_size, strides=stride, padding="same")(x)
+    x = BatchNormalization()(x)
+    x = ReLU()(x)
+    # Second convolution
+    x = Conv2D(filters, kernel_size=kernel_size, strides=1, padding="same")(x)
+    x = BatchNormalization()(x)
+    # Adjusting the shortcut for addition if necessary
+    if stride != 1 or shortcut.shape[-1] != filters:
+        shortcut = Conv2D(filters, kernel_size=1, strides=stride, padding="same")(shortcut)
+        shortcut = BatchNormalization()(shortcut)
+    # Adding the shortcut to the output
+    x = Add()([x, shortcut])
+    x = ReLU()(x)
     return x
 
 
 def create_embedding_model(input_shape):
     input_img = Input(shape=input_shape)
 
-    x = Conv2D(64, kernel_size=(7, 7), strides=(2, 2), padding='same')(input_img)
-    x = MaxPooling2D(pool_size=(2, 2))(x)
+    x = Conv2D(64, (7, 7), strides=2, padding='same', activation='relu')(input_img)
+    x = MaxPooling2D((2, 2), padding='same')(x)
 
-    x = add_resblock(x, 64, 3)
-    x = MaxPooling2D(pool_size=(2, 2))(x)
-    x = add_resblock(x, 128, 4)
-    x = add_resblock(x, 256, 6)
-    x = add_resblock(x, 512, 3)
+    # Residual Blocks
+    x = res_block(x, 64)
+    x = res_block(x, 64)
+    x = res_block(x, 128, stride=2)  # Downsample
+    x = res_block(x, 128)
+    x = res_block(x, 256, stride=2)  # Downsample
+    x = res_block(x, 256)
+    x = res_block(x, 512, stride=2)  # Downsample
+    x = res_block(x, 512)
 
     x = GlobalAveragePooling2D()(x)
 
