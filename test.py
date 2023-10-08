@@ -46,7 +46,7 @@ def load_dataset(root_folder):
 
 
 def evaluate_model(model, test_images, test_labels):
-    threshold = 0.5
+    threshold = 1.0
     tp, tn, fp, fn = 0, 0, 0, 0
     genuine_distances = []
     impostor_distances = []
@@ -101,4 +101,5 @@ if __name__ == '__main__':
     plt.xlabel('Distance')
     plt.ylabel('Frequency')
     plt.legend()
-    plt.show()
+
+    plt.savefig('test_metrics.png', dpi=300, bbox_inches='tight')
