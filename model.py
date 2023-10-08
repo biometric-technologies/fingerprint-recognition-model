@@ -1,31 +1,49 @@
+from keras.layers import Input, Conv2D, MaxPooling2D, Add, Dense, Lambda, GlobalAveragePooling2D, \
+    BatchNormalization, ReLU
 from keras.models import Model
-from keras.layers import Input, Conv2D, MaxPooling2D, UpSampling2D, concatenate, Softmax
+import tensorflow as tf
 
 
-def create_unet_model(input_shape):
-    input_img = Input(input_shape)
+def res_block(x, filters, kernel_size=3, stride=1):
+    shortcut = x
+    # First convolution
+    x = Conv2D(filters, kernel_size=kernel_size, strides=stride, padding="same")(x)
+    x = BatchNormalization()(x)
+    x = ReLU()(x)
+    # Second convolution
+    x = Conv2D(filters, kernel_size=kernel_size, strides=1, padding="same")(x)
+    x = BatchNormalization()(x)
+    # Adjusting the shortcut for addition if necessary
+    if stride != 1 or shortcut.shape[-1] != filters:
+        shortcut = Conv2D(filters, kernel_size=1, strides=stride, padding="same")(shortcut)
+        shortcut = BatchNormalization()(shortcut)
+    # Adding the shortcut to the output
+    x = Add()([x, shortcut])
+    x = ReLU()(x)
+    return x
 
-    # Encoding/Downsampling
-    x = Conv2D(64, (3, 3), activation='relu', padding='same')(input_img)
+
+def create_embedding_model(input_shape):
+    input_img = Input(shape=input_shape)
+
+    x = Conv2D(64, (7, 7), strides=2, padding='same', activation='relu')(input_img)
     x = MaxPooling2D((2, 2), padding='same')(x)
-    x = Conv2D(128, (3, 3), activation='relu', padding='same')(x)
-    encoded = MaxPooling2D((2, 2), padding='same')(x)
 
-    # Decoding/Upsampling for classification
-    x_class = Conv2D(128, (3, 3), activation='relu', padding='same')(encoded)
-    x_class = UpSampling2D((2, 2))(x_class)
-    x_class = Conv2D(64, (3, 3), activation='relu', padding='same')(x_class)
-    x_class = UpSampling2D((2, 2))(x_class)
-    x_class = Conv2D(3, (3, 3), activation='softmax', padding='same', name="classification")(
-        x_class)  # 3 channels for classes
+    # Residual Blocks
+    x = res_block(x, 64)
+    x = res_block(x, 64)
+    x = res_block(x, 128, stride=2)
+    x = res_block(x, 128)
+    x = res_block(x, 256, stride=2)
+    x = res_block(x, 256)
+    x = res_block(x, 512, stride=2)
+    x = res_block(x, 512)
 
-    # Decoding/Upsampling for orientation angle prediction
-    x_regress = Conv2D(128, (3, 3), activation='relu', padding='same')(encoded)
-    x_regress = UpSampling2D((2, 2))(x_regress)
-    x_regress = Conv2D(64, (3, 3), activation='relu', padding='same')(x_regress)
-    x_regress = UpSampling2D((2, 2))(x_regress)
-    x_regress = Conv2D(1, (3, 3), activation='linear', padding='same', name="orientation")(
-        x_regress)  # 1 channel for angle
+    x = GlobalAveragePooling2D()(x)
 
-    # Create Model
-    return Model(inputs=input_img, outputs=[x_class, x_regress])
+    template_output = Dense(128, activation='relu', name='template_output')(x)
+    # L2 Normalization
+    normalized_template = Lambda(lambda x: tf.math.l2_normalize(x, axis=-1), name='normalized_template')(
+        template_output)
+
+    return Model(inputs=input_img, outputs=normalized_template)

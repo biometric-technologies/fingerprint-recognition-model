@@ -3,12 +3,13 @@ from keras.models import Model, load_model
 import cv2
 import os
 import numpy as np
-from train2 import triplet_loss
+from train import triplet_loss
 
 
 def preprocess_image(image_path):
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
     img = cv2.resize(img, (192, 192))
+    img = cv2.equalizeHist(img)
     img = img / 255.0
     return img
 
@@ -59,9 +60,9 @@ def evaluate_model(model, test_images, test_labels):
 
 
 if __name__ == '__main__':
-    saved_model_path = "saved_model2"
+    saved_model_path = "saved_model"
     loaded_model = load_model(saved_model_path, custom_objects={"triplet_loss": triplet_loss})
-    test_images, test_labels = load_dataset("fingerprint-v5-master-2")
+    test_images, test_labels = load_dataset("fingerprint-v5-master-test")
     test_labels = preprocess_labels(test_labels)
     embedding_model = loaded_model.layers[3]
     accuracy = evaluate_model(embedding_model, test_images, test_labels)
