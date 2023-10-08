@@ -60,9 +60,9 @@ if __name__ == '__main__':
         )
     ]
 
-    train_gen, val_gen = create_casia_v5_generators(root_folder, 32)
+    train_gen, val_gen = create_casia_v5_generators(root_folder, 64)
 
-    history = triplet_model.fit(x=train_gen, validation_data=val_gen, callbacks=callbacks_list, epochs=64)
+    history = triplet_model.fit(x=train_gen, validation_data=val_gen, callbacks=callbacks_list, epochs=256)
 
     saved_model_path = os.path.join(".", 'saved_model')
     save_model(triplet_model, saved_model_path)

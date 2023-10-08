@@ -43,15 +43,16 @@ class CasiaV5TripletGenerator(Sequence):
         # Select a different sample index for the positive sample
         positive_sample_idx = choice([i for i in range(5) if i != anchor_sample_idx])
         positive_path = os.path.join(self.root_folder, subj, hand,
-                                     f"{subj}_L{anchor_finger_idx}_{positive_sample_idx}.bmp")
+                                     f"{subj}_{hand}{anchor_finger_idx}_{positive_sample_idx}.bmp")
         positive_img = self._load_image(positive_path)
 
         # Get a negative sample (different subject)
         negative_subj = choice([s for s in subjects if s != subj])
+        negative_hand = choice(["L", "R"])
         negative_finger_idx = np.random.choice(range(4))
         negative_sample_idx = np.random.choice(range(5))
-        negative_path = os.path.join(self.root_folder, negative_subj, hand,
-                                     f"{negative_subj}_{hand}{negative_finger_idx}_{negative_sample_idx}.bmp")
+        negative_path = os.path.join(self.root_folder, negative_subj, negative_hand,
+                                     f"{negative_subj}_{negative_hand}{negative_finger_idx}_{negative_sample_idx}.bmp")
         negative_img = self._load_image(negative_path)
 
         return anchor_img, positive_img, negative_img
