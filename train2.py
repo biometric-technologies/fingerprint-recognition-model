@@ -30,7 +30,7 @@ def load_and_preprocess(image_path):
 if __name__ == '__main__':
     root_folder = 'fingerprint-v5-master-3'
 
-    embedding_model = model2.create_unet_model((192, 192, 1))
+    embedding_model = model2.create_embedding_model((192, 192, 1))
     print(embedding_model.summary())
 
     input_anchor = Input(shape=(192, 192, 1))
@@ -45,11 +45,11 @@ if __name__ == '__main__':
     triplet_model = Model([input_anchor, input_positive, input_negative], output)
     triplet_model.compile(optimizer='adam', loss=triplet_loss)
 
-    checkpoint = ModelCheckpoint('model_weights_best.h5', save_best_only=True, monitor='val_loss')
+    checkpoint = ModelCheckpoint('weights/model_weights_best.h5', save_best_only=True, monitor='val_loss')
 
     train_gen, val_gen = create_casiaV5_generators(root_folder, 32)
 
-    history = triplet_model.fit(x=train_gen, validation_data=val_gen, epochs=8)
+    history = triplet_model.fit(x=train_gen, validation_data=val_gen, epochs=128)
 
     saved_model_path = os.path.join(".", 'saved_model')
     save_model(triplet_model, saved_model_path)
