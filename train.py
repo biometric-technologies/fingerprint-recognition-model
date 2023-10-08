@@ -3,10 +3,10 @@ import cv2
 import numpy as np
 import tensorflow as tf
 from keras.callbacks import ModelCheckpoint
-from keras.layers import Input
+from keras.layers import Input, concatenate
 from keras.models import Model, save_model
 import model
-from tripplet_generator import create_casiaV5_generators
+from tripplet_generator import create_casia_v5_generators
 import matplotlib.pyplot as plt
 
 
@@ -24,6 +24,7 @@ def load_and_preprocess(image_path):
         return None
     img = cv2.resize(img, (192, 192))
     img = cv2.equalizeHist(img)
+    img = cv2.bitwise_not(img)
     img = img / 255.0
     return img
 
@@ -42,15 +43,26 @@ if __name__ == '__main__':
     embedding_positive = embedding_model(input_positive)
     embedding_negative = embedding_model(input_negative)
 
-    output = tf.keras.layers.concatenate([embedding_anchor, embedding_positive, embedding_negative], axis=1)
+    output = concatenate([embedding_anchor, embedding_positive, embedding_negative], axis=1)
     triplet_model = Model([input_anchor, input_positive, input_negative], output)
     triplet_model.compile(optimizer='adam', loss=triplet_loss)
 
-    checkpoint = ModelCheckpoint('model_weights_best.h5', save_best_only=True, monitor='val_loss')
+    callbacks_list = [
+        ModelCheckpoint(
+            filepath='fingerprint_model/checkpoint_{epoch:02d}.hdf5',
+            monitor='val_loss',
+            verbose=0,
+            save_best_only=True,
+            mode='auto',
+            save_freq='epoch',
+            options=None,
+            initial_value_threshold=None
+        )
+    ]
 
-    train_gen, val_gen = create_casiaV5_generators(root_folder, 32)
+    train_gen, val_gen = create_casia_v5_generators(root_folder, 32)
 
-    history = triplet_model.fit(x=train_gen, validation_data=val_gen, epochs=64)
+    history = triplet_model.fit(x=train_gen, validation_data=val_gen, callbacks=callbacks_list, epochs=64)
 
     saved_model_path = os.path.join(".", 'saved_model')
     save_model(triplet_model, saved_model_path)

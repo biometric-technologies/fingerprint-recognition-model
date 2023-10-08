@@ -1,5 +1,5 @@
 from math import ceil
-
+from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import Sequence
 import os
 import numpy as np
@@ -14,6 +14,15 @@ class CasiaV5TripletGenerator(Sequence):
         self.subjects = subjects
         self.total_samples = sum(
             [len(os.listdir(os.path.join(root_folder, subj, 'L'))) for subj in subjects])
+        self.datagen = ImageDataGenerator(
+            rotation_range=20,
+            width_shift_range=0.2,
+            height_shift_range=0.2,
+            shear_range=0.2,
+            zoom_range=0.2,
+            horizontal_flip=True,
+            fill_mode='nearest'
+        )
 
     def _load_image(self, path):
         img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
@@ -23,13 +32,12 @@ class CasiaV5TripletGenerator(Sequence):
         img = img / 255.0
         return img
 
-    def _get_triplet(self, subjects, subj):
-        # Get anchor and positive samples
-        hand = 'L'
-        anchor_finger_idx = np.random.choice(range(4))  # Assuming 5 fingers
+    def _get_triplet(self, subjects, subj, hand):
+        anchor_finger_idx = np.random.choice(range(4))  # Assuming 4 fingers
         anchor_sample_idx = np.random.choice(range(5))  # Assuming at least 5 samples per finger
 
-        anchor_path = os.path.join(self.root_folder, subj, hand, f"{subj}_L{anchor_finger_idx}_{anchor_sample_idx}.bmp")
+        anchor_path = os.path.join(self.root_folder, subj, hand,
+                                   f"{subj}_{hand}{anchor_finger_idx}_{anchor_sample_idx}.bmp")
         anchor_img = self._load_image(anchor_path)
 
         # Select a different sample index for the positive sample
@@ -43,7 +51,7 @@ class CasiaV5TripletGenerator(Sequence):
         negative_finger_idx = np.random.choice(range(4))
         negative_sample_idx = np.random.choice(range(5))
         negative_path = os.path.join(self.root_folder, negative_subj, hand,
-                                     f"{negative_subj}_L{negative_finger_idx}_{negative_sample_idx}.bmp")
+                                     f"{negative_subj}_{hand}{negative_finger_idx}_{negative_sample_idx}.bmp")
         negative_img = self._load_image(negative_path)
 
         return anchor_img, positive_img, negative_img
@@ -52,10 +60,11 @@ class CasiaV5TripletGenerator(Sequence):
         anchors, positives, negatives = [], [], []
         for _ in range(self.batch_size):
             subj = choice(subjects)
-            anchor, positive, negative = self._get_triplet(subjects, subj)
-            anchors.append(anchor)
-            positives.append(positive)
-            negatives.append(negative)
+            for hand in ["L", "R"]:
+                anchor, positive, negative = self._get_triplet(subjects, subj, hand)
+                anchors.append(self.datagen.random_transform(anchor))
+                positives.append(self.datagen.random_transform(positive))
+                negatives.append(self.datagen.random_transform(negative))
 
         return [np.array(anchors), np.array(positives), np.array(negatives)], np.zeros(self.batch_size)
 
@@ -66,7 +75,7 @@ class CasiaV5TripletGenerator(Sequence):
         return self._get_triplets(self.subjects)
 
 
-def create_casiaV5_generators(root_folder, batch_size, split_ratio=0.8):
+def create_casia_v5_generators(root_folder, batch_size, split_ratio=0.8):
     all_subjects = os.listdir(root_folder)
     np.random.shuffle(all_subjects)
     split_at = int(len(all_subjects) * split_ratio)
