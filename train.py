@@ -18,17 +18,6 @@ def triplet_loss(y_true, y_pred, margin=1.0):
     return tf.reduce_mean(loss)
 
 
-def load_and_preprocess(image_path):
-    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    if img is None:
-        return None
-    img = cv2.resize(img, (192, 192))
-    img = cv2.equalizeHist(img)
-    img = cv2.bitwise_not(img)
-    img = img / 255.0
-    return img
-
-
 if __name__ == '__main__':
     root_folder = 'fingerprint-v5-master'
 

@@ -4,7 +4,7 @@ from keras.utils import Sequence
 import os
 import numpy as np
 import cv2
-from random import choice, sample
+from random import choice
 
 
 class CasiaV5TripletGenerator(Sequence):
@@ -13,7 +13,8 @@ class CasiaV5TripletGenerator(Sequence):
         self.batch_size = batch_size
         self.subjects = subjects
         self.total_samples = sum(
-            [len(os.listdir(os.path.join(root_folder, subj, 'L'))) for subj in subjects])
+            [len(os.listdir(os.path.join(root_folder, subj, 'L'))) for subj in subjects]) * 2 # 2 hands
+
         self.datagen = ImageDataGenerator(
             rotation_range=20,
             width_shift_range=0.2,
@@ -24,13 +25,15 @@ class CasiaV5TripletGenerator(Sequence):
             fill_mode='nearest'
         )
 
-    def _load_image(self, path):
-        img = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+    def _load_image(self, image_path):
+        img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
         if img is None:
             return None
         img = cv2.resize(img, (192, 192))
+        img = cv2.equalizeHist(img)
+        img = cv2.bitwise_not(img)
         img = img / 255.0
-        return img
+        return np.expand_dims(img, axis=-1)
 
     def _get_triplet(self, subjects, subj, hand):
         anchor_finger_idx = np.random.choice(range(4))  # Assuming 4 fingers
