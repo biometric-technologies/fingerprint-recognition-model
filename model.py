@@ -52,7 +52,7 @@ def create_embedding_model(input_shape):
 
     x = GlobalAveragePooling2D()(x)
 
-    template_output = Dense(96, activation='relu', name='template_output')(x)
+    template_output = Dense(128, activation='relu', name='template_output')(x)
 
     # L2 Normalization
     normalized_template = Lambda(lambda x: tf.math.l2_normalize(x, axis=-1), name='normalized_template')(
