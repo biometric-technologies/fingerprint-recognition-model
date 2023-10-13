@@ -1,96 +1,61 @@
 from keras.layers import Input, Conv2D, MaxPooling2D, Add, Dense, Lambda, Activation, SeparableConv2D, \
-    BatchNormalization, GlobalAveragePooling2D
+    ReLU, GlobalAveragePooling2D
 from keras.models import Model
+from keras.layers import add
 import tensorflow as tf
 
 
-def entry_flow(inputs):
-    x = Conv2D(32, 3, strides=2, padding='same')(inputs)
-    x = BatchNormalization()(x)
-    x = Activation('relu')(x)
+def create_embedding_model(input_shape):
+    input_img = Input(shape=input_shape)
+    x = Conv2D(32, (3, 3), strides=(2, 2), activation='relu')(input_img)
+    x = Conv2D(64, (3, 3), activation='relu')(x)
 
-    x = Conv2D(64, 3, padding='same')(x)
-    x = BatchNormalization()(x)
-    x = Activation('relu')(x)
+    residual = Conv2D(128, (1, 1), strides=(2, 2))(x)
+    x = SeparableConv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x = SeparableConv2D(128, (3, 3), padding='same')(x)
+    x = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(x)
+    x = add([x, residual])
 
-    previous_block_activation = x
+    residual = Conv2D(256, (1, 1), strides=(2, 2))(x)
+    x = ReLU()(x)
+    x = SeparableConv2D(256, (3, 3), activation='relu', padding='same')(x)
+    x = SeparableConv2D(256, (3, 3), padding='same')(x)
+    x = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(x)
+    x = add([x, residual])
 
-    for size in [128, 256, 728]:
-        x = Activation('relu')(x)
-        x = SeparableConv2D(size, 3, padding='same')(x)
-        x = BatchNormalization()(x)
+    residual = Conv2D(728, (1, 1), strides=(2, 2))(x)
+    x = ReLU()(x)
+    x = SeparableConv2D(728, (3, 3), activation='relu', padding='same')(x)
+    x = SeparableConv2D(728, (3, 3), padding='same')(x)
+    x = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(x)
+    x = add([x, residual])
 
-        x = Activation('relu')(x)
-        x = SeparableConv2D(size, 3, padding='same')(x)
-        x = BatchNormalization()(x)
+    # Middle Flow
+    for _ in range(8):
+        residual = x
+        x = ReLU()(x)
+        x = SeparableConv2D(728, (3, 3), activation='relu', padding='same')(x)
+        x = SeparableConv2D(728, (3, 3), activation='relu', padding='same')(x)
+        x = SeparableConv2D(728, (3, 3), padding='same')(x)
+        x = add([x, residual])
 
-        x = MaxPooling2D(3, strides=2, padding='same')(x)
+    # Exit Flow
+    residual = Conv2D(1024, (1, 1), strides=(2, 2))(x)
+    x = ReLU()(x)
+    x = SeparableConv2D(728, (3, 3), activation='relu', padding='same')(x)
+    x = SeparableConv2D(1024, (3, 3), padding='same')(x)
+    x = MaxPooling2D((3, 3), strides=(2, 2), padding='same')(x)
+    x = add([x, residual])
 
-        residual = Conv2D(size, 1, strides=2, padding='same')(previous_block_activation)
-
-        x = Add()([x, residual])
-        previous_block_activation = x
-
-    return x
-
-
-def middle_flow(x, num_blocks=8):
-    previous_block_activation = x
-
-    for _ in range(num_blocks):
-        x = Activation('relu')(x)
-        x = SeparableConv2D(728, 3, padding='same')(x)
-        x = BatchNormalization()(x)
-
-        x = Activation('relu')(x)
-        x = SeparableConv2D(728, 3, padding='same')(x)
-        x = BatchNormalization()(x)
-
-        x = Activation('relu')(x)
-        x = SeparableConv2D(728, 3, padding='same')(x)
-        x = BatchNormalization()(x)
-
-        x = Add()([x, previous_block_activation])
-        previous_block_activation = x
-
-    return x
-
-
-def exit_flow(x):
-    previous_block_activation = x
-
-    x = Activation('relu')(x)
-    x = SeparableConv2D(728, 3, padding='same')(x)
-    x = BatchNormalization()(x)
-
-    x = Activation('relu')(x)
-    x = SeparableConv2D(1024, 3, padding='same')(x)
-    x = BatchNormalization()(x)
-
-    x = MaxPooling2D(3, strides=2, padding='same')(x)
-
-    residual = Conv2D(1024, 1, strides=2, padding='same')(previous_block_activation)
-    x = Add()([x, residual])
-
-    x = Activation('relu')(x)
-    x = SeparableConv2D(728, 3, padding='same')(x)
-    x = BatchNormalization()(x)
-
-    x = Activation('relu')(x)
-    x = SeparableConv2D(1024, 3, padding='same')(x)
-    x = BatchNormalization()(x)
+    x = SeparableConv2D(1536, (3, 3), activation='relu', padding='same')(x)
+    x = SeparableConv2D(2048, (3, 3), activation='relu', padding='same')(x)
 
     x = GlobalAveragePooling2D()(x)
-    x = Dense(96, activation='relu', name='template_output')(x)
 
-    return x
-
-
-def create_embedding_model(input_shape):
-    inputs = Input(shape=input_shape)
-    xception = exit_flow(middle_flow(entry_flow(inputs)))
+    template_output = Dense(96, activation='relu', name='template_output')(x)
 
     # L2 Normalization
-    normalized_template = Lambda(lambda x: tf.math.l2_normalize(x, axis=-1), name='normalized_template')(xception)
+    normalized_template = Lambda(lambda x: tf.math.l2_normalize(x, axis=-1), name='normalized_template')(
+        template_output)
 
-    return Model(inputs=inputs, outputs=normalized_template)
+    return Model(inputs=input_img, outputs=normalized_template)
