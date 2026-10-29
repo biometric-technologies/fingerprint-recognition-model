@@ -10,7 +10,9 @@ from tripplet_generator import create_casia_v5_generators
 import matplotlib.pyplot as plt
 
 
-def triplet_loss(y_true, y_pred, margin=1.0):
+def triplet_loss(y_true, y_pred, margin=0.3):
+    # Embeddings are L2-normalized, so squared distances are in [0, 4]; a margin of 0.2-0.5
+    # is the usual range (FaceNet uses 0.2).
     anchor, positive, negative = y_pred[:, :128], y_pred[:, 128:256], y_pred[:, 256:]
     pos_dist = tf.reduce_sum(tf.square(anchor - positive), axis=-1)
     neg_dist = tf.reduce_sum(tf.square(anchor - negative), axis=-1)

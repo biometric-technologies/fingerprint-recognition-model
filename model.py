@@ -52,7 +52,9 @@ def create_embedding_model(input_shape):
 
     x = GlobalAveragePooling2D()(x)
 
-    template_output = Dense(128, activation='relu', name='template_output')(x)
+    # Linear projection: a ReLU here would keep every embedding in the positive orthant
+    # after L2 normalization, wasting most of the embedding space.
+    template_output = Dense(128, name='template_output')(x)
 
     # L2 Normalization
     normalized_template = Lambda(lambda x: tf.math.l2_normalize(x, axis=-1), name='normalized_template')(

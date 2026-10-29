@@ -21,7 +21,7 @@ class CasiaV5TripletGenerator(Sequence):
             height_shift_range=0.2,
             shear_range=0.2,
             zoom_range=0.2,
-            horizontal_flip=True,
+            # no flips: a mirrored fingerprint is a different (non-existent) finger
             fill_mode='nearest'
         )
 
@@ -49,10 +49,15 @@ class CasiaV5TripletGenerator(Sequence):
                                      f"{subj}_{hand}{anchor_finger_idx}_{positive_sample_idx}.bmp")
         positive_img = self._load_image(positive_path)
 
-        # Get a negative sample (different subject)
-        negative_subj = choice([s for s in subjects if s != subj])
-        negative_hand = choice(["L", "R"])
-        negative_finger_idx = np.random.choice(range(4))
+        # Negative: another finger. Half of the time a different finger of the same person
+        # (hard negative: similar skin and capture), otherwise a different person.
+        if np.random.rand() < 0.5:
+            negative_subj, negative_hand = subj, hand
+            negative_finger_idx = choice([i for i in range(4) if i != anchor_finger_idx])
+        else:
+            negative_subj = choice([s for s in subjects if s != subj])
+            negative_hand = choice(["L", "R"])
+            negative_finger_idx = np.random.choice(range(4))
         negative_sample_idx = np.random.choice(range(5))
         negative_path = os.path.join(self.root_folder, negative_subj, negative_hand,
                                      f"{negative_subj}_{negative_hand}{negative_finger_idx}_{negative_sample_idx}.bmp")
@@ -70,7 +75,8 @@ class CasiaV5TripletGenerator(Sequence):
                 positives.append(self.datagen.random_transform(positive))
                 negatives.append(self.datagen.random_transform(negative))
 
-        return [np.array(anchors), np.array(positives), np.array(negatives)], np.zeros(self.batch_size)
+        # two triplets (left and right hand) per drawn subject
+        return [np.array(anchors), np.array(positives), np.array(negatives)], np.zeros(len(anchors))
 
     def __len__(self):
         return self.total_samples // self.batch_size
@@ -79,9 +85,9 @@ class CasiaV5TripletGenerator(Sequence):
         return self._get_triplets(self.subjects)
 
 
-def create_casia_v5_generators(root_folder, batch_size, split_ratio=0.8):
-    all_subjects = os.listdir(root_folder)
-    np.random.shuffle(all_subjects)
+def create_casia_v5_generators(root_folder, batch_size, split_ratio=0.8, seed=24):
+    all_subjects = sorted(os.listdir(root_folder))
+    np.random.RandomState(seed).shuffle(all_subjects)
     split_at = int(len(all_subjects) * split_ratio)
     train_subjects = all_subjects[:split_at]
     validation_subjects = all_subjects[split_at:]
