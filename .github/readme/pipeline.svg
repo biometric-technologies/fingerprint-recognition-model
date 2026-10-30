@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="360" viewBox="0 0 960 360" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1c77c3"/>
+    </marker>
+  </defs>
+  <rect x="0.5" y="0.5" width="959" height="359" rx="16" fill="#ffffff" stroke="#d0d7de"/>
+
+  <text x="480" y="40" text-anchor="middle" fill="#0a328f" font-size="18" font-weight="600">From two fingerprint images to a same-or-different decision</text>
+
+  <!-- Row A: fingerprint 1 -->
+  <rect x="40" y="80" width="160" height="70" rx="10" fill="#eaf4ff" stroke="#1c77c3"/>
+  <text x="120" y="110" text-anchor="middle" fill="#0a328f" font-size="16">Fingerprint A</text>
+  <text x="120" y="132" text-anchor="middle" fill="#57606a" font-size="13">grayscale, 192 x 192</text>
+
+  <line x1="202" y1="115" x2="258" y2="115" stroke="#1c77c3" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="230" y="103" text-anchor="middle" fill="#57606a" font-size="13">clean up</text>
+
+  <rect x="260" y="80" width="190" height="70" rx="10" fill="#eaf4ff" stroke="#1c77c3"/>
+  <text x="355" y="110" text-anchor="middle" fill="#0a328f" font-size="16">Embedding network</text>
+  <text x="355" y="132" text-anchor="middle" fill="#57606a" font-size="13">same weights for every image</text>
+
+  <line x1="452" y1="115" x2="508" y2="115" stroke="#1c77c3" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="510" y="80" width="170" height="70" rx="10" fill="#eaf4ff" stroke="#5cc8ff" stroke-width="2"/>
+  <text x="595" y="110" text-anchor="middle" fill="#0a328f" font-size="16">128 numbers</text>
+  <text x="595" y="132" text-anchor="middle" fill="#57606a" font-size="13">vector of length 1</text>
+
+  <!-- Row B: fingerprint 2 -->
+  <rect x="40" y="200" width="160" height="70" rx="10" fill="#eaf4ff" stroke="#1c77c3"/>
+  <text x="120" y="230" text-anchor="middle" fill="#0a328f" font-size="16">Fingerprint B</text>
+  <text x="120" y="252" text-anchor="middle" fill="#57606a" font-size="13">grayscale, 192 x 192</text>
+
+  <line x1="202" y1="235" x2="258" y2="235" stroke="#1c77c3" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="230" y="223" text-anchor="middle" fill="#57606a" font-size="13">clean up</text>
+
+  <rect x="260" y="200" width="190" height="70" rx="10" fill="#eaf4ff" stroke="#1c77c3"/>
+  <text x="355" y="230" text-anchor="middle" fill="#0a328f" font-size="16">Embedding network</text>
+  <text x="355" y="252" text-anchor="middle" fill="#57606a" font-size="13">same weights for every image</text>
+
+  <line x1="452" y1="235" x2="508" y2="235" stroke="#1c77c3" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="510" y="200" width="170" height="70" rx="10" fill="#eaf4ff" stroke="#5cc8ff" stroke-width="2"/>
+  <text x="595" y="230" text-anchor="middle" fill="#0a328f" font-size="16">128 numbers</text>
+  <text x="595" y="252" text-anchor="middle" fill="#57606a" font-size="13">vector of length 1</text>
+
+  <!-- Converging arrows to distance -->
+  <line x1="682" y1="115" x2="738" y2="160" stroke="#1c77c3" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="682" y1="235" x2="738" y2="190" stroke="#1c77c3" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <rect x="740" y="140" width="180" height="70" rx="10" fill="#eaf4ff" stroke="#1c77c3"/>
+  <text x="830" y="170" text-anchor="middle" fill="#0a328f" font-size="16">Distance</text>
+  <text x="830" y="192" text-anchor="middle" fill="#57606a" font-size="13">between the two vectors</text>
+
+  <!-- Decision -->
+  <text x="830" y="248" text-anchor="middle" fill="#0a328f" font-size="16">small: same finger</text>
+  <text x="830" y="272" text-anchor="middle" fill="#0a328f" font-size="16">large: different finger</text>
+
+  <text x="480" y="330" text-anchor="middle" fill="#57606a" font-size="13">Clean up = histogram equalization, inversion, scale to 0..1. The cut-off between small and large is a threshold you pick from your own test data.</text>
+</svg>

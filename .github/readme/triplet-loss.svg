@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="340" viewBox="0 0 960 340" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1c77c3"/>
+    </marker>
+  </defs>
+  <rect x="0.5" y="0.5" width="959" height="339" rx="16" fill="#ffffff" stroke="#d0d7de"/>
+
+  <text x="480" y="40" text-anchor="middle" fill="#0a328f" font-size="18" font-weight="600">Triplet loss: what the network is trained to do</text>
+
+  <!-- Left: the three images -->
+  <rect x="40" y="80" width="190" height="60" rx="10" fill="#eaf4ff" stroke="#1c77c3"/>
+  <text x="135" y="106" text-anchor="middle" fill="#0a328f" font-size="16">Anchor</text>
+  <text x="135" y="128" text-anchor="middle" fill="#57606a" font-size="13">a finger, one impression</text>
+
+  <rect x="40" y="160" width="190" height="60" rx="10" fill="#eaf4ff" stroke="#1c77c3"/>
+  <text x="135" y="186" text-anchor="middle" fill="#0a328f" font-size="16">Positive</text>
+  <text x="135" y="208" text-anchor="middle" fill="#57606a" font-size="13">same finger, other impression</text>
+
+  <rect x="40" y="240" width="190" height="60" rx="10" fill="#eaf4ff" stroke="#1c77c3"/>
+  <text x="135" y="266" text-anchor="middle" fill="#0a328f" font-size="16">Negative</text>
+  <text x="135" y="288" text-anchor="middle" fill="#57606a" font-size="13">a different finger</text>
+
+  <!-- Arrows into shared network -->
+  <line x1="232" y1="110" x2="298" y2="170" stroke="#1c77c3" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="232" y1="190" x2="298" y2="190" stroke="#1c77c3" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="232" y1="270" x2="298" y2="210" stroke="#1c77c3" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Shared network -->
+  <rect x="300" y="150" width="190" height="80" rx="10" fill="#eaf4ff" stroke="#1c77c3"/>
+  <text x="395" y="184" text-anchor="middle" fill="#0a328f" font-size="16">One network,</text>
+  <text x="395" y="206" text-anchor="middle" fill="#0a328f" font-size="16">three embeddings</text>
+
+  <line x1="492" y1="190" x2="548" y2="190" stroke="#1c77c3" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Right: embedding space sketch -->
+  <rect x="550" y="70" width="370" height="240" rx="10" fill="#ffffff" stroke="#1c77c3" stroke-dasharray="6 4"/>
+  <text x="735" y="96" text-anchor="middle" fill="#57606a" font-size="13">embedding space (vectors of length 1)</text>
+
+  <!-- Anchor point -->
+  <circle cx="660" cy="200" r="9" fill="#1c77c3"/>
+  <text x="660" y="232" text-anchor="middle" fill="#0a328f" font-size="16">anchor</text>
+
+  <!-- Positive point, pulled closer -->
+  <circle cx="760" cy="150" r="9" fill="#5cc8ff" stroke="#1c77c3" stroke-width="2"/>
+  <text x="790" y="136" text-anchor="middle" fill="#0a328f" font-size="16">positive</text>
+  <line x1="748" y1="158" x2="680" y2="192" stroke="#1c77c3" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="740" y="190" text-anchor="middle" fill="#57606a" font-size="13">pull closer</text>
+
+  <!-- Negative point, pushed away -->
+  <circle cx="790" cy="260" r="9" fill="#ffffff" stroke="#1c77c3" stroke-width="2"/>
+  <text x="820" y="292" text-anchor="middle" fill="#0a328f" font-size="16">negative</text>
+  <line x1="800" y1="262" x2="880" y2="282" stroke="#1c77c3" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="840" y="248" text-anchor="middle" fill="#57606a" font-size="13">push away</text>
+
+  <text x="480" y="328" text-anchor="middle" fill="#57606a" font-size="13">The loss is zero once the negative is farther from the anchor than the positive by at least the margin. After training, distance alone separates fingers.</text>
+</svg>
