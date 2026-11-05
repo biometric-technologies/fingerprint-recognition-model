@@ -1,7 +1,7 @@
 tensorflow==2.11.0
 keras==2.11.0
 matplotlib
-numpy
+numpy<2  # TensorFlow 2.11 is built against NumPy 1.x and fails to import with NumPy 2
 opencv-python
 fingerprint_enhancer
 fingerprint-feature-extractor
