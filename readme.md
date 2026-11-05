@@ -83,4 +83,4 @@ License: not yet specified. The repository has no license file; contact Iriscan 
 
 ## Contact
 
-Questions and bug reports: [open an issue](https://github.com/biometric-technologies/fingerprint-recognition-model/issues) or write to info@iriscan.net. More about Iriscan at https://www.iriscan.com.
+Questions and bug reports: [open an issue](https://github.com/biometric-technologies/fingerprint-recognition-model/issues) or write to info@iriscan.com. More about Iriscan at https://www.iriscan.com.
