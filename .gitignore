@@ -86,3 +86,5 @@ dmypy.json
 .venv
 venv/
 ENV/
+__pycache__/
+.pytest_cache/
